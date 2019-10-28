@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Enemy : MonoBehaviour
 {
@@ -10,12 +11,14 @@ public class Enemy : MonoBehaviour
     public int MaxDist = 10;
     public int MinDist = 5;
 
-    public GameObject basketball;
+    //public GameObject basketball;
+    public Slider healthBar;
 
     private Rigidbody2D m_Rigidbody2D;
 
     public Animator animator;
     public int health;
+    private int baseHealth;
     public GameObject deathEffect;
     public int phaseNumber = 1;
 
@@ -26,6 +29,7 @@ public class Enemy : MonoBehaviour
     {
         m_Rigidbody2D = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        baseHealth = health;
     }
     public void TakeDamage(int damage)
     {
@@ -105,13 +109,16 @@ public class Enemy : MonoBehaviour
 
     void AttackAI()
     {
+
+        healthBar.value = health;
+
         // Changing the boss' phase depending on their health
-        if (health <= 3)
+        if (health <= baseHealth / 3f)
         {
             phaseNumber = 3;
             animator.SetInteger("phaseNumber", phaseNumber);
         }
-        else if (health <= 6)
+        else if (health <= 2 * baseHealth / 3f)
         {
             phaseNumber = 2;
             animator.SetInteger("phaseNumber", phaseNumber);
