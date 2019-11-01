@@ -19,9 +19,12 @@ public class PlayerMovement : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
-
-		horizontalMove = Input.GetAxisRaw("Horizontal") * runSpeed;
-
+        
+        if (!crouch)
+        {
+            horizontalMove = Input.GetAxisRaw("Horizontal") * runSpeed;
+        }
+		
 		animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
 
 		if (Input.GetButtonDown("Jump"))
@@ -39,8 +42,11 @@ public class PlayerMovement : MonoBehaviour {
 		}
         if (Input.GetButtonDown("Roll"))
         {
-            roll = true;
-            animator.SetBool("IsRolling", true);
+            if (controller.rollReady)
+            {
+                roll = true;
+                animator.SetBool("IsRolling", true);
+            }
         }
 
 	}

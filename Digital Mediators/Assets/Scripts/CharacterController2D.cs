@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 public class CharacterController2D : MonoBehaviour
 {
@@ -12,7 +13,10 @@ public class CharacterController2D : MonoBehaviour
 	[SerializeField] private Transform m_CeilingCheck;							// A position marking where to check for ceilings
 	[SerializeField] private Collider2D m_CrouchDisableCollider;				// A collider that will be disabled when crouching
 
-    private float rollSpeed = 1500f;
+    public float rollCooldown = 1f;
+    public float rollTimer = 0f;
+    private float rollSpeed = 2500f;
+    public bool rollReady = true;
     private PlayerMovement playerMovementScript;
 
 	const float k_GroundedRadius = .2f; // Radius of the overlap circle to determine if grounded
@@ -22,7 +26,12 @@ public class CharacterController2D : MonoBehaviour
 	private bool m_FacingRight = true;  // For determining which way the player is currently facing.
 	private Vector3 m_Velocity = Vector3.zero;
 
-	[Header("Events")]
+    // Sounds
+    public AudioSource jumpSound;
+    public AudioSource rollSound;
+    private bool playedRollSound;
+
+    [Header("Events")]
 	[Space]
 
 	public UnityEvent OnLandEvent;
@@ -78,14 +87,33 @@ public class CharacterController2D : MonoBehaviour
 			}
 		}
 
-        if (roll && !m_FacingRight)
+        // Roll cooldown
+        if (!rollReady)
+        {
+            rollTimer -= Time.deltaTime;
+            if (rollTimer <= 0f)
+            {
+                rollReady = true;
+            }
+        }
+
+        if (roll && !playedRollSound)
+        {
+            rollSound.Play();
+            playedRollSound = true;
+        }
+        if (roll && !m_FacingRight & rollReady)
         {
             playerMovementScript.roll = false;
             m_Rigidbody2D.AddForce(new Vector2(-rollSpeed, 100f));
-        } else if (roll && m_FacingRight)
+            rollReady = false;
+            rollTimer = rollCooldown;
+        } else if (roll && m_FacingRight && rollReady)
         {
             playerMovementScript.roll = false;
             m_Rigidbody2D.AddForce(new Vector2(rollSpeed, 100f));
+            rollReady = false;
+            rollTimer = rollCooldown;
         }
 
         //only control the player if grounded or airControl is turned on
@@ -141,7 +169,8 @@ public class CharacterController2D : MonoBehaviour
 		// If the player should jump...
 		if (m_Grounded && jump)
 		{
-			// Add a vertical force to the player.
+            // Add a vertical force to the player.
+            jumpSound.Play();
 			m_Grounded = false;
 			m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
 		}
@@ -156,9 +185,26 @@ public class CharacterController2D : MonoBehaviour
 		transform.Rotate(0f, 180f, 0f);
 	}
 
+    void OnCollisionEnter2D(Collision2D col)
+    {
+        if (col.gameObject.tag == "Lethal")
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+    }
+
+    void OnTriggerEnter2D(Collider2D col)
+    {
+        if (col.gameObject.tag == "Lethal")
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+    }
+
     void rollAnimationEnded()
     {
-        playerMovementScript.roll = true;
+        playedRollSound = false;
+        //playerMovementScript.roll = true;
         playerMovementScript.animator.SetBool("IsRolling", false);
     }
 }

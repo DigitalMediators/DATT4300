@@ -5,9 +5,11 @@ using UnityEngine;
 public class Bullet : MonoBehaviour {
 
 	public float speed = 20f;
-	public int damage = 40;
+	public int damage = 1;
 	public Rigidbody2D rb;
 	public GameObject impactEffect;
+    public Enemy enemy;
+    public MovingObject movingObject;
 
 	// Use this for initialization
 	void Start () {
@@ -18,13 +20,22 @@ public class Bullet : MonoBehaviour {
 	{
 		Enemy enemy = hitInfo.GetComponent<Enemy>();
         PhysicsObject physicsObject = hitInfo.GetComponent<PhysicsObject>();
+        MovingObject movingObject = hitInfo.GetComponent<MovingObject>();
 		if (enemy != null)
 		{
-			enemy.TakeDamage(damage);
+            if (enemy.isVulnerable)
+            {
+                enemy.TakeDamage(damage);
+            }
 		}
         if (physicsObject != null)
         {
             physicsObject.rb.AddForce(new Vector2(rb.velocity.x * (10 / physicsObject.rb.mass), (5 / physicsObject.rb.mass)));
+        }
+        if (hitInfo.gameObject.tag == "Breakable")
+        {
+            movingObject.TakeDamage(damage);
+            //print("breakable hit");
         }
 
 		Instantiate(impactEffect, transform.position, transform.rotation);
